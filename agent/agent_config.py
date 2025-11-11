@@ -10,7 +10,6 @@ from agent.system_prompts import load_system_prompt
 # Choose AI model based on environment
 # Option 1: Groq (Free & Fast - Recommended!)
 # Option 2: OpenAI (Free $5 credits, then pay-per-use)  
-# Option 3: Keep Bedrock (requires AWS setup)
 MODEL_TYPE = os.getenv('AI_MODEL_TYPE', 'groq')  # Default to Groq
 
 if MODEL_TYPE == 'groq':
@@ -19,12 +18,9 @@ if MODEL_TYPE == 'groq':
 elif MODEL_TYPE == 'openai':
     # OpenAI GPT-3.5 Turbo - Free $5 credits
     model = 'openai:gpt-3.5-turbo'
-elif MODEL_TYPE == 'bedrock':
-    # AWS Bedrock Claude (original)
-    model = 'bedrock:us.anthropic.claude-3-5-sonnet-20241022-v2:0'
 else:
-    # Fallback to Groq
-    model = 'groq:llama-3.1-70b-versatile'
+    # Fallback to Groq if invalid type specified
+    model = 'groq:llama-3.1-8b-instant'
 
 # Initialize the AI agent
 agent = Agent(

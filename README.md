@@ -93,16 +93,29 @@ CONFLUENCE_SPACE_ID=YOUR_SPACE
 # Groq AI (Free)
 AI_MODEL_TYPE=groq
 GROQ_API_KEY=gsk_your-groq-api-key
-
-# Optional
-STATUSPAGE_API_KEY=your-statuspage-key
 ```
 
 ### Getting Free API Keys
 
-- **🆓 Slack**: Create bot at https://api.slack.com/apps
-- **🆓 Atlassian**: Sign up at https://atlassian.com (10 users free)
-- **🆓 Groq**: Get API key at https://console.groq.com (fast & free)
+#### 🆓 Slack Bot Setup
+
+📚 **[Complete Slack Integration Guide](slack_integration/README.md)** - Follow this comprehensive guide for:
+
+- Step-by-step Slack app creation
+- Required bot permissions (13 scopes needed)
+- Socket Mode configuration  
+- Slash command setup (`/declare-incident`)
+- Troubleshooting common permission issues
+- Testing and validation procedures
+
+**Quick Setup**: Create app → Add required scopes → Enable Socket Mode → Add slash command → Install to workspace
+
+#### 🆓 Atlassian Setup
+- **Sign up**: https://atlassian.com (10 users free)
+- **API Token**: Generate at id.atlassian.com/manage-profile/security/api-tokens
+
+#### 🆓 Groq AI Setup  
+- **API Key**: Get free key at https://console.groq.com (fast & free)
 
 ## 🎯 Personal Learning Outcomes
 
@@ -153,11 +166,25 @@ AI Comm/
 
 ## 🧪 Testing Your Setup
 
+### Quick Permission Check
 ```bash
-# Start everything
+# Start the system
 ./run.sh
 
-# Expected output:
+# In Slack, try these commands:
+1. `/declare-incident sev2`  # Should create incident channel or show permission error
+2. @your_bot_name hello     # Should respond in channel  
+
+# Expected output in terminal:
+🚀 Starting AI Communication System...
+✅ Slack connection successful!
+✅ Socket Mode connection established
+🔧 [SLASH COMMAND] /declare-incident detected...
+```
+
+### Full System Test
+```bash
+# Expected startup flow:
 🚀 Starting AI Communication System...
 📄 Loading environment variables from .env file...
 ✅ Environment variables loaded
@@ -167,6 +194,29 @@ AI Comm/
 ```
 
 Visit http://localhost:8081 to see the incident simulation interface.
+
+## 🔧 Troubleshooting
+
+### Common Slack Permission Issues
+
+**❌ Error**: `missing_scope - needed: 'channels:manage'`
+**✅ Fix**: Add `channels:manage` scope in Slack app OAuth & Permissions, then reinstall app
+
+**❌ Error**: `channel_not_found` or `not_in_channel`  
+**✅ Fix**: Invite your bot to the channel: `/invite @your_bot_name`
+
+**❌ Error**: `invalid_auth`
+**✅ Fix**: Check that SLACK_BOT_TOKEN starts with `xoxb-` and SLACK_APP_TOKEN starts with `xapp-`
+
+### Slash Command Not Working
+1. Verify Socket Mode is enabled
+2. Check App-Level Token has `connections:write` scope  
+3. Ensure `/declare-incident` command is created in Slack app settings
+4. Bot must be added to the channel where command is used
+
+### AI Generation Issues
+- **Fallback Mode**: If AI fails, system uses timestamp-based naming
+- **API Limits**: Groq free tier has rate limits; errors are logged but don't break functionality
 
 ## 🛠️ Technology Stack
 

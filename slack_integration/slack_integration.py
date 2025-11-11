@@ -335,11 +335,10 @@ def generate_incident_name_and_summary(messages: list, severity: str) -> dict:
     conversation = "\n".join([f"{msg['user']}: {msg['text']}" for msg in messages])
 
     try:
-        import boto3
+        # Use the configured AI agent instead of hardcoded Bedrock
         import json
-
-        bedrock_runtime = boto3.client('bedrock-runtime', region_name='us-east-1')
-
+        from agent.agent_config import agent
+        
         prompt = f"""Based on this recent Slack conversation, analyze the incident and provide:
 1. A concise 2-4 word description for the incident channel name
 2. A one-line summary of the incident
@@ -363,26 +362,43 @@ Requirements for summary:
 Return your response in this exact JSON format:
 {{"channel_name": "your-channel-name", "summary": "Your one-line summary here"}}"""
 
-        request_body = {
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 200,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt
+        # Use the underlying model directly instead of the agent that requires state context
+        import httpx
+        import os
+        from agent.agent_config import model
+        
+        # Extract the model name from the configured model string
+        model_str = str(model)
+        print(f"   🤖 Using model: {model_str}")
+        
+        if 'groq:' in model_str:
+            # Use Groq API directly
+            model_name = model_str.replace('groq:', '')
+            headers = {
+                'Authorization': f'Bearer {os.getenv("GROQ_API_KEY")}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = httpx.post(
+                'https://api.groq.com/openai/v1/chat/completions',
+                headers=headers,
+                json={
+                    'model': model_name,
+                    'messages': [{'role': 'user', 'content': prompt}],
+                    'max_tokens': 500
                 }
-            ],
-            "temperature": 0.3
-        }
-
-        # Use cross-region inference profile for better availability
-        response = bedrock_runtime.invoke_model(
-            modelId='us.anthropic.claude-3-5-sonnet-20241022-v2:0',
-            body=json.dumps(request_body)
-        )
-
-        response_body = json.loads(response['body'].read())
-        ai_response = response_body['content'][0]['text'].strip()
+            )
+            
+            if response.status_code == 200:
+                ai_response = response.json()['choices'][0]['message']['content'].strip()
+            else:
+                raise Exception(f"Groq API error: {response.status_code} - {response.text}")
+        else:
+            # Fallback to simple agent
+            from pydantic_ai import Agent
+            simple_agent = Agent(model)
+            response = simple_agent.run_sync(prompt)
+            ai_response = response.data.strip()
 
         # Try to parse JSON response
         try:
@@ -540,11 +556,13 @@ def handle_slash_command(client: SocketModeClient, req: SocketModeRequest):
             sanitized_name = _sanitize_channel_name(suggested_channel_name)
 
             try:
+                print(f"   🏗️ Attempting to create channel: {sanitized_name}")
                 create_response = web_client.conversations_create(
                     name=sanitized_name,
                     is_private=False
                 )
-
+                
+                print(f"   📡 Slack API response: {create_response}")
                 if create_response["ok"]:
                     created_channel_id = create_response["channel"]["id"]
                     created_channel_name = create_response["channel"]["name"]
@@ -574,7 +592,9 @@ def handle_slash_command(client: SocketModeClient, req: SocketModeRequest):
 
             except SlackApiError as e:
                 error = e.response.get("error", "Unknown")
+                print(f"   ⚠️ Slack API Error: {error} - {e.response}")
                 if error == "name_taken":
+                    print(f"   🔄 Channel name already exists, finding existing channel...")
                     try:
                         channels_response = web_client.conversations_list()
                         for ch in channels_response.get("channels", []):
@@ -583,8 +603,22 @@ def handle_slash_command(client: SocketModeClient, req: SocketModeRequest):
                                 created_channel_name = ch["name"]
                                 print(f"   ✓ Found existing channel: #{created_channel_name}")
                                 break
-                    except Exception:
-                        pass
+                    except Exception as list_error:
+                        print(f"   ❌ Error listing channels: {list_error}")
+                elif error == "missing_scope":
+                    print(f"   🔧 Missing permissions for channel creation. Using current channel as fallback.")
+                    # Use the current channel where the command was issued
+                    created_channel_id = channel_id
+                    created_channel_name = "current-channel"
+                else:
+                    print(f"   ❌ Channel creation failed with error: {error}")
+                    print(f"   ❌ Channel creation failed with error: {error}")
+            except Exception as general_error:
+                print(f"   ❌ Unexpected error during channel creation: {general_error}")
+                import traceback
+                traceback.print_exc()
+
+            print(f"   📊 Channel creation result: created_channel_id = {created_channel_id}")
 
             context_summary = ""
             if recent_messages:
