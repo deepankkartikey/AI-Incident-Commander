@@ -64,7 +64,22 @@ Navigate to **OAuth & Permissions** and add these Bot Token Scopes:
 - `im:read` - View direct messages
 - `mpim:read` - View group direct messages
 
-#### 3. Enable Socket Mode
+#### 3. Add the Slash Command
+
+Navigate to **Features** → **Slash Commands**:
+
+1. Click **"Create New Command"**
+2. Fill in the command details:
+   - **Command**: `/declare-incident`
+   - **Request URL**: Leave blank (Socket Mode handles this)
+   - **Short Description**: `Declare an incident with severity level`
+   - **Usage Hint**: `sev1 or sev2`
+   - **Escape channels, users, and links**: Leave unchecked
+3. Click **"Save"**
+
+This enables users to type `/declare-incident sev1` or `/declare-incident sev2` in any Slack channel to create incident response channels automatically.
+
+#### 4. Enable Socket Mode
 
 Navigate to **Socket Mode**:
 
@@ -74,21 +89,28 @@ Navigate to **Socket Mode**:
 
 **Important:** This creates an `xapp-...` token (different from the bot token)
 
-#### 4. Event Subscriptions
+#### 5. Enable Event Subscriptions
 
-Navigate to **Event Subscriptions**:
+Navigate to **Features** → **Event Subscriptions**:
 
-1. Enable Events
-2. Subscribe to Bot Events:
+1. **Toggle "Enable Events" to ON**
+2. **Request URL**: Leave blank (Socket Mode doesn't need this)
+3. **Subscribe to Bot Events** - Add these events:
    - `message.channels` - Listen to messages in public channels
    - `message.groups` - Listen to messages in private channels
+   - `app_mention` - When bot is mentioned (@botname)
+4. Click **"Save Changes"**
 
-#### 5. Install App to Workspace
+These events allow the bot to monitor channel conversations for incident context and respond when mentioned.
 
-1. Navigate to **OAuth & Permissions**
-2. Click "Install to Workspace"
-3. Authorize the app
+#### 6. Install App to Workspace
+
+1. Navigate to **Settings** → **Install App**
+2. Click **"Reinstall to Workspace"** (this is important to activate the new slash command)
+3. Authorize the app with all requested permissions
 4. Copy the **Bot User OAuth Token** (starts with `xoxb-`)
+
+**Note:** You must reinstall the app after adding the slash command and event subscriptions to activate these features.
 
 ## Environment Variables
 
