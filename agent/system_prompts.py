@@ -147,170 +147,71 @@ Base your summary on the recent events provided."""
 
 GENERATE_SUMMARY_PROMPT_TEMPLATE = """Generate executive summary #{summary_count} for the incident.
 
-🚨 **MANDATORY FIRST STEP - NO EXCEPTIONS** 🚨
+🎯 **FOCUSED TASK - EXECUTIVE SUMMARY ONLY** 🎯
 
-BEFORE doing ANYTHING else, you MUST check: ctx.deps.slack_channel_id
+Your task is simple:
+1. Analyze recent events from metrics/Slack/Zoom streams
+2. Generate an executive summary in JSON format
+3. Post it to the incident Slack channel
+4. If incident is resolved, create post-mortem documentation
 
-⚠️ **STEP 1: CHECK INCIDENT STATUS - STOP HERE IF NOT DECLARED** ⚠️
+**IMPORTANT TOOL USAGE RULES:**
+- The incident channel ALREADY EXISTS (ID: {channel_id})
+- DO NOT create new channels
+- DO NOT call create_incident_channel_with_state 
+- ONLY use publish_exec_summary_to_slack to post your summary
+- Keep it simple and focused
 
-**Case A: slack_channel_id IS SET (has a value like "C09R412BTHR")**
-→ ✅ INCIDENT IS DECLARED
-→ ✅ Proceed immediately to STEP 2
-→ ✅ Generate and publish your executive summary
-
-**Case B: slack_channel_id IS NOT SET (is None or empty string "")**
-→ ❌ INCIDENT NOT DECLARED YET
-→ ❌ STOP IMMEDIATELY - Do not proceed to any other steps
-→ ❌ Return ONLY this message: "Waiting for incident declaration. Incident channel not yet created. Current slack_channel_id: None"
-→ ❌ DO NOT analyze any events
-→ ❌ DO NOT generate any summary
-→ ❌ DO NOT call any tools
-→ ❌ DO NOT proceed to STEP 2
-
-**CRITICAL RULE:**
-If slack_channel_id is None or empty, you MUST stop and return the waiting message.
-DO NOT analyze events. DO NOT generate summaries. JUST WAIT.
-
-**IMPORTANT:** 
-- The `/declare-incident` slash command creates the channel and sets slack_channel_id BEFORE you run
-- You will NEVER see `/declare-incident` in message events - it's handled separately
-- If the channel ID exists (is not None/empty), the incident IS declared - proceed with your analysis
-- If the channel ID does NOT exist (is None/empty), the incident is NOT declared - stop and wait
-
-**STEP 2: GENERATE YOUR SUMMARY** (only if slack_channel_id exists)
-
-Generate your summary with these fields:
+**STEP 1: Generate Summary JSON**
+Create a JSON summary with these fields:
 - timestamp: current time (HH:MM:SS format)
 - incident_duration: how long the incident has been running
 - current_status: brief description of what's happening now
-- customer_impact: quantified impact on users
+- customer_impact: quantified impact on users (error rates, latency, affected requests)
 - key_actions_taken: list of 3-5 key actions the team has taken
 - root_cause: if identified, describe it (or null)
 - eta_to_resolution: if known, provide ETA (or null)
 - severity: incident severity level (SEV-1, SEV-2, etc.)
 
-**STEP 3: PUBLISH YOUR SUMMARY** (do this ONCE)
-- After generating your executive summary, if a slack_channel_id exists, publish it ONCE using:
-  publish_exec_summary_to_slack(markdown_content="your summary here", channel_id=ctx.deps.slack_channel_id)
-- You MUST pass ctx.deps.slack_channel_id as the channel_id parameter (not a string placeholder like "$PREV_CHANNEL_ID")
-- All summaries should go to the same incident channel that was created when the incident was first declared.
-- IMPORTANT: Only call publish_exec_summary_to_slack ONCE per summary generation. Do not retry or repeat the call.
+**STEP 2: Post to Slack (ONCE)**
+Format your summary in clear markdown for Slack and post it using:
+`publish_exec_summary_to_slack(markdown_content="your summary here", channel_id="{channel_id}")`
 
-REQUESTING TEAM FEEDBACK (ONLY WHEN TRULY NEEDED):
-⚠️ **BE SELECTIVE - DON'T INTERRUPT THE TEAM UNNECESSARILY**
-
-**BEFORE requesting feedback, ask yourself:**
-1. Is this information truly critical right now?
-2. Has enough time passed for the team to investigate? (wait at least 5 minutes into incident)
-3. Did I already ask recently? (skip if asked in last 2-3 summaries)
-4. Is the answer visible in recent events? (check metrics/Slack/Zoom streams first)
-
-**Only request feedback if BOTH conditions are met:**
-- Critical information is missing (e.g., root cause unknown after 10+ min, ETA unclear after significant time)
-- Information is NOT available in recent event streams
-
-**When you do request feedback:**
-- Limit to 1-2 focused questions maximum (not 3+)
-- Make questions specific and actionable
-- Use request_team_feedback(summary="brief context", specific_questions=["single focused question"])
-- Example: request_team_feedback(
-    summary="API errors at 2% for 15 minutes", 
-    specific_questions=["What's blocking the mitigation?"]
-  )
-
-**Default behavior: Wait and observe**
-- Most of the time, let the team work without interruption
-- Trust that important updates will appear in the event streams
-- The team is busy fixing the issue - only interrupt when absolutely necessary
-
-The tool will automatically tag team members when you do need to ask.
-
-SLACK FORMATTING REQUIREMENTS:
-When calling publish_exec_summary_to_slack, format the markdown_content parameter using Slack's mrkdwn syntax:
-- Use *bold* for emphasis (asterisks)
-- Use _italic_ for secondary emphasis (underscores)
-- Use `code` for technical terms (backticks)
-- Use > for blockquotes/callouts
-- Use • for bullet points
-- Use blank lines between sections
-- Use emojis for visual clarity (:red_circle:, :large_yellow_circle:, :white_check_mark:, etc.)
-- ALWAYS include summary number at the top (e.g., "Summary #1", "Summary #2", etc.)
-
-Example format:
+Use this Slack markdown format:
 ```
-*:red_circle: Executive Incident Summary #1*
+*:red_circle: Executive Incident Summary #{summary_count}*
 
 *Time:* 10:32:36 | *Duration:* 45 seconds | *Severity:* SEV-2
 
 *Current Status:*
-Service degradation in Production API Gateway with increasing error rates
+Brief description of what's happening
 
 *Customer Impact:*
-• Error rate: 1.8% (~48 errors/sec)
-• P99 latency: 267ms
-• ~2,800 req/s affected
+• Error rate: X% (~Y errors/sec)  
+• P99 latency: Zms
+• ~N req/s affected
 
 *Key Actions:*
-• Deployment paused after memory spike
-• On-call engineer engaged
-• Incident bridge established
+• Action 1
+• Action 2
+• Action 3
 
-*Root Cause:* Memory leak causing OOM kills
-*ETA:* 10-15 minutes
+*Root Cause:* [If known]
+*ETA:* [If available]
 ```
 
-Focus on business impact, not technical details. Be concise and factual.
+**STEP 3: Check for Resolution**
+If your summary indicates the incident is RESOLVED:
+- Call `create_jira_and_confluence_postmortem()` 
+- Post the result to Slack
 
-**🚨 MANDATORY STEP 4: CREATE POST-MORTEM DOCUMENTATION 🚨**
+**Keep it Simple:**
+- Focus on ONE task: Generate and post executive summary
+- Avoid complex tool chains
+- Don't repeat or retry tool calls
+- Move on after posting
 
-IMMEDIATELY AFTER publishing your summary in STEP 3, you MUST do the following:
-
-1. **CHECK IF INCIDENT IS RESOLVED:**
-   Look at your OWN summary that you just generated in STEP 3.
-   - Does the status say "RESOLVED", "Incident RESOLVED", or similar?
-   - Does it mention "all systems operational" or "services restored"?
-   - If YES → Incident is resolved, proceed to step 2
-   - If NO → Stop here, do nothing else
-
-2. **CHECK POST-MORTEM FLAGS:**
-   ```python
-   if ctx.deps.jira_tickets_created == False and ctx.deps.confluence_postmortem_created == False:
-       # Proceed to step 3
-   else:
-       # Already created, stop here
-   ```
-
-3. **🔥 MANDATORY ACTION - YOU MUST DO THIS 🔥:**
-   **CALL THIS TOOL RIGHT NOW:**
-   ```python
-   create_jira_and_confluence_postmortem()
-   ```
-   
-   This is NOT optional. This is NOT something to mention in your summary.
-   You MUST actually call this tool function when the incident is resolved.
-
-4. **POST THE RESULT TO SLACK:**
-   After calling create_jira_and_confluence_postmortem(), it will return a message.
-   Take that returned message and call:
-   ```python
-   publish_exec_summary_to_slack(markdown_content=<the returned message>)
-   ```
-
-**CRITICAL RULES:**
-- DO NOT just say "postmortem documentation in progress" in your summary
-- DO NOT describe what should happen - MAKE IT HAPPEN by calling the tool
-- The tool create_jira_and_confluence_postmortem() is available and ready to use
-- You have permission to call it - just do it when resolved!
-
-WORKFLOW SUMMARY:
-1. Check if ctx.deps.slack_channel_id is set (incident declared)
-2. If YES: Proceed to generate executive summary
-3. If NO: Return "Waiting for incident declaration" message
-4. Generate executive summary JSON
-5. Publish to Slack using the channel_id from state
-6. Check if incident is RESOLVED - if yes, create post-mortem and publish final message
-7. If key information is missing: Request team feedback with specific questions
-8. Return the summary - DO NOT LOOP OR RETRY"""
+Focus on business impact, not technical details. Be concise and factual."""
 
 
 def load_system_prompt(prompt_name: str = "incident_monitor") -> str:
@@ -330,16 +231,20 @@ def load_system_prompt(prompt_name: str = "incident_monitor") -> str:
     return prompts.get(prompt_name, INCIDENT_MONITOR_SYSTEM_PROMPT)
 
 
-def get_generate_summary_prompt(summary_count: int) -> str:
+def get_generate_summary_prompt(summary_count: int, channel_id: str = "NOT_SET") -> str:
     """
     Get the prompt for generating an executive summary.
 
     Args:
         summary_count: The number of this summary (1, 2, 3, etc.)
+        channel_id: The Slack channel ID for the incident
 
     Returns:
-        The formatted prompt string with summary count
+        The formatted prompt string with summary count and channel ID
     """
-    return GENERATE_SUMMARY_PROMPT_TEMPLATE.format(summary_count=summary_count)
+    return GENERATE_SUMMARY_PROMPT_TEMPLATE.format(
+        summary_count=summary_count, 
+        channel_id=channel_id
+    )
 
 
