@@ -1,0 +1,639 @@
+{
+  "incident": {
+    "title": "Production API Gateway Outage - Nov 6, 2025",
+    "duration_seconds": 1800,
+    "description": "Cascading failure triggered by memory leak in v3.2.1 deployment affecting threat-intel-service connectivity"
+  },
+  "events": [
+    {
+      "time_offset": 0,
+      "channel": "metrics",
+      "message": "api-gateway-cluster p99_latency=145ms error_rate=0.12% req/s=2847"
+    },
+    {
+      "time_offset": 1,
+      "channel": "metrics",
+      "message": "threat-intel-service query_rate=1834/s cache_hit_ratio=92% avg_response_time=23ms"
+    },
+    {
+      "time_offset": 1,
+      "channel": "metrics",
+      "message": "auth-service token_validations=5621/s success_rate=99.97% avg_latency=8ms"
+    },
+    {
+      "time_offset": 2,
+      "channel": "team",
+      "message": "[Warren-SRE] Starting routine deployment of v3.2.1 to production"
+    },
+    {
+      "time_offset": 8,
+      "channel": "metrics",
+      "message": "deployment-system event=started version=v3.2.1 target_instances=12 batch_size=3"
+    },
+    {
+      "time_offset": 15,
+      "channel": "metrics",
+      "message": "deployment-system event=batch_complete version=v3.2.1 instances=[prod-07,prod-04,prod-11] status=healthy"
+    },
+    {
+      "time_offset": 18,
+      "channel": "team",
+      "message": "[Warren-SRE] First batch deployed successfully, monitoring metrics"
+    },
+    {
+      "time_offset": 30,
+      "channel": "metrics",
+      "message": "api-gateway-prod-07 memory_used=3.2GB memory_total=8GB memory_percent=45% heap_objects=1.2M"
+    },
+    {
+      "time_offset": 45,
+      "channel": "metrics",
+      "message": "api-gateway-prod-07 memory_used=4.5GB memory_percent=62% heap_objects=2.1M goroutines=847"
+    },
+    {
+      "time_offset": 50,
+      "channel": "metrics",
+      "message": "api-gateway-prod-04 memory_used=3.8GB memory_percent=48% heap_objects=1.4M"
+    },
+    {
+      "time_offset": 52,
+      "channel": "team",
+      "message": "[Preetha-Dev] That's unusual, memory should be stable after warmup"
+    },
+    {
+      "time_offset": 55,
+      "channel": "metrics",
+      "message": "api-gateway-prod-11 memory_used=4.0GB memory_percent=51% heap_objects=1.5M"
+    },
+    {
+      "time_offset": 60,
+      "channel": "metrics",
+      "message": "deployment-system event=batch_start version=v3.2.1 instances=[prod-02,prod-09,prod-15] batch=2/4"
+    },
+    {
+      "time_offset": 65,
+      "channel": "metrics",
+      "message": "api-gateway-prod-07 memory_used=5.8GB memory_percent=72% heap_objects=3.4M goroutines=1243"
+    },
+    {
+      "time_offset": 72,
+      "channel": "metrics",
+      "message": "api-gateway-cluster p99_latency=189ms error_rate=0.18% req/s=2901"
+    },
+    {
+      "time_offset": 73,
+      "channel": "metrics",
+      "message": "threat-intel-service connection_errors=12 upstream_timeout_rate=0.3%"
+    },
+    {
+      "time_offset": 75,
+      "channel": "metrics",
+      "message": "api-gateway-prod-07 memory_used=7.1GB memory_percent=89% heap_objects=4.8M goroutines=1891"
+    },
+    {
+      "time_offset": 78,
+      "channel": "team",
+      "message": "[Warren-SRE] Seeing memory spike on -07, pausing deployment"
+    },
+    {
+      "time_offset": 80,
+      "channel": "metrics",
+      "message": "deployment-system event=pause_requested reason=manual user=warren.gray@arcticwolf.com"
+    },
+    {
+      "time_offset": 82,
+      "channel": "metrics",
+      "message": "api-gateway-prod-07 event=oom_kill exit_code=137 uptime=67s last_memory=7.9GB"
+    },
+    {
+      "time_offset": 84,
+      "channel": "metrics",
+      "message": "kubernetes event=pod_restart pod=api-gateway-prod-07 reason=OOMKilled restarts=1"
+    },
+    {
+      "time_offset": 85,
+      "channel": "team",
+      "message": "[Marcus-Oncall] I'm getting paged - what's happening?"
+    },
+    {
+      "time_offset": 87,
+      "channel": "zoom",
+      "message": "\ud83d\udd14 Marcus-Oncall joined the incident bridge"
+    },
+    {
+      "time_offset": 111,
+      "channel": "metrics",
+      "message": "api-gateway-cluster p99_latency=267ms p95_latency=198ms req/s=2834"
+    },
+    {
+      "time_offset": 113,
+      "channel": "metrics",
+      "message": "detection-engine event_processing_lag=3.2s queue_depth=1847 dropped_events=23"
+    },
+    {
+      "time_offset": 114,
+      "channel": "metrics",
+      "message": "alert-engine trigger_rate=412/s delivery_success=94.2% notification_lag=890ms"
+    },
+    {
+      "time_offset": 116,
+      "channel": "metrics",
+      "message": "api-gateway-cluster status_code_2xx=2612/s status_code_5xx=48/s error_rate=1.8%"
+    },
+    {
+      "time_offset": 93,
+      "channel": "zoom",
+      "message": "\ud83d\udd14 Warren-SRE joined the incident bridge"
+    },
+    {
+      "time_offset": 95,
+      "channel": "team",
+      "message": "[Warren-SRE] Instance -07 OOM'd and restarted. Investigating v3.2.1"
+    },
+    {
+      "time_offset": 97,
+      "channel": "zoom",
+      "message": "[Warren-SRE] Everyone can hear me? Okay, we have OOM kills on the new deployment"
+    },
+    {
+      "time_offset": 100,
+      "channel": "metrics",
+      "message": "api-gateway-prod-04 memory_used=6.0GB memory_percent=75% heap_objects=3.9M goroutines=1654"
+    },
+    {
+      "time_offset": 105,
+      "channel": "metrics",
+      "message": "api-gateway-prod-11 memory_used=6.2GB memory_percent=78% heap_objects=4.1M goroutines=1723"
+    },
+    {
+      "time_offset": 108,
+      "channel": "metrics",
+      "message": "api-gateway-cluster p99_latency=412ms error_rate=3.2% active_connections=8942"
+    },
+    {
+      "time_offset": 110,
+      "channel": "zoom",
+      "message": "\ud83d\udd14 Preetha-Dev joined the incident bridge"
+    },
+    {
+      "time_offset": 112,
+      "channel": "team",
+      "message": "[Preetha-Dev] All v3.2.1 instances showing memory leak pattern!"
+    },
+    {
+      "time_offset": 114,
+      "channel": "zoom",
+      "message": "[Preetha-Dev] I'm looking at the graphs now - every v3.2.1 instance has linear memory growth"
+    },
+    {
+      "time_offset": 115,
+      "channel": "metrics",
+      "message": "api-gateway-prod-07 memory_used=2.1GB memory_percent=26% status=starting health_check=passing"
+    },
+    {
+      "time_offset": 118,
+      "channel": "metrics",
+      "message": "api-gateway-prod-04 memory_used=7.5GB memory_percent=94% heap_objects=5.8M goroutines=2241"
+    },
+    {
+      "time_offset": 120,
+      "channel": "metrics",
+      "message": "api-gateway-prod-04 event=oom_kill exit_code=137 uptime=105s last_memory=7.9GB"
+    },
+    {
+      "time_offset": 122,
+      "channel": "team",
+      "message": "[Warren-SRE] Declaring SEV-2 incident. Initiating rollback"
+    },
+    {
+      "time_offset": 123,
+      "channel": "zoom",
+      "message": "[Warren-SRE] Declaring SEV-2. Marcus, you're incident commander. I'm rolling back now"
+    },
+    {
+      "time_offset": 124,
+      "channel": "metrics",
+      "message": "api-gateway-prod-11 memory_used=7.8GB memory_percent=98% heap_objects=6.2M"
+    },
+    {
+      "time_offset": 125,
+      "channel": "metrics",
+      "message": "api-gateway-prod-11 event=oom_kill exit_code=137 uptime=110s last_memory=7.9GB"
+    },
+    {
+      "time_offset": 127,
+      "channel": "zoom",
+      "message": "[Marcus-Oncall] Copy that. I've got IC. Who's handling comms?"
+    },
+    {
+      "time_offset": 128,
+      "channel": "team",
+      "message": "[Marcus-Oncall] Customer reports coming in - API timeouts"
+    },
+    {
+      "time_offset": 130,
+      "channel": "metrics",
+      "message": "api-gateway-cluster p99_latency=1247ms p95_latency=891ms req/s=2456"
+    },
+    {
+      "time_offset": 132,
+      "channel": "metrics",
+      "message": "incident-service api_errors=89/s customer_facing_errors=34/s case_creation_lag=2.1s"
+    },
+    {
+      "time_offset": 133,
+      "channel": "metrics",
+      "message": "data-pipeline ingestion_lag=5.4s throughput=41k/s backpressure_events=12"
+    },
+    {
+      "time_offset": 135,
+      "channel": "metrics",
+      "message": "api-gateway-cluster status_code_2xx=2289/s status_code_5xx=167/s error_rate=5.2%"
+    },
+    {
+      "time_offset": 138,
+      "channel": "metrics",
+      "message": "deployment-system event=rollback_start version=v3.2.1->v3.2.0 instances=6 reason=incident"
+    },
+    {
+      "time_offset": 140,
+      "channel": "team",
+      "message": "[Warren-SRE] Rolling back v3.2.1 to v3.2.0 on all instances"
+    },
+    {
+      "time_offset": 145,
+      "channel": "metrics",
+      "message": "api-gateway-cluster status_code_503=312/s total_errors=389/s error_rate=12.8%"
+    },
+    {
+      "time_offset": 146,
+      "channel": "metrics",
+      "message": "web-portal active_users=2847 websocket_disconnects=189 page_load_errors=67/min"
+    },
+    {
+      "time_offset": 147,
+      "channel": "zoom",
+      "message": "🔔 Deepank-PM joined the incident bridge"
+    },
+    {
+      "time_offset": 148,
+      "channel": "team",
+      "message": "[Marcus-Oncall] Error rate at 12.8%, mostly 503s. Load balancer struggling"
+    },
+    {
+      "time_offset": 150,
+      "channel": "team",
+      "message": "[Deepank-PM] How long until resolution? Customer impact?"
+    },
+    {
+      "time_offset": 151,
+      "channel": "zoom",
+      "message": "[Deepank-PM] Hi everyone, what's our customer impact assessment?"
+    },
+    {
+      "time_offset": 152,
+      "channel": "metrics",
+      "message": "load-balancer healthy_backends=6/12 unhealthy_backends=3 starting_backends=3"
+    },
+    {
+      "time_offset": 155,
+      "channel": "team",
+      "message": "[Marcus-Oncall] ~15% of requests failing. ETA 10-15 minutes"
+    },
+    {
+      "time_offset": 157,
+      "channel": "zoom",
+      "message": "[Marcus-Oncall] We're seeing about 15% error rate right now. Warren's rolling back, should stabilize in 10-15"
+    },
+    {
+      "time_offset": 160,
+      "channel": "metrics",
+      "message": "kubernetes event=pod_restart pod=api-gateway-prod-04 reason=OOMKilled restarts=1"
+    },
+    {
+      "time_offset": 162,
+      "channel": "metrics",
+      "message": "kubernetes event=pod_restart pod=api-gateway-prod-11 reason=OOMKilled restarts=1"
+    },
+    {
+      "time_offset": 165,
+      "channel": "metrics",
+      "message": "deployment-system event=rollback_progress completed=3/6 instances=[prod-07,prod-04,prod-11]"
+    },
+    {
+      "time_offset": 170,
+      "channel": "metrics",
+      "message": "api-gateway-prod-07 version=v3.2.0 memory_used=3.1GB memory_percent=39% status=healthy"
+    },
+    {
+      "time_offset": 175,
+      "channel": "metrics",
+      "message": "api-gateway-prod-04 version=v3.2.0 memory_used=2.9GB memory_percent=36% status=healthy"
+    },
+    {
+      "time_offset": 180,
+      "channel": "metrics",
+      "message": "api-gateway-prod-11 version=v3.2.0 memory_used=3.3GB memory_percent=41% status=healthy"
+    },
+    {
+      "time_offset": 185,
+      "channel": "team",
+      "message": "[Warren-SRE] Rollback helping - seeing memory stabilize"
+    },
+    {
+      "time_offset": 187,
+      "channel": "zoom",
+      "message": "[Warren-SRE] Rollback is working - memory dropping back to normal levels"
+    },
+    {
+      "time_offset": 190,
+      "channel": "metrics",
+      "message": "api-gateway-cluster status_code_2xx=2547/s status_code_5xx=198/s error_rate=7.2%"
+    },
+    {
+      "time_offset": 192,
+      "channel": "metrics",
+      "message": "threat-intel-service connection_pool_healthy=true query_rate=1623/s cache_warming=true"
+    },
+    {
+      "time_offset": 193,
+      "channel": "metrics",
+      "message": "detection-engine event_processing_lag=1.8s queue_depth=942 processing_rate=1850/s"
+    },
+    {
+      "time_offset": 195,
+      "channel": "metrics",
+      "message": "load-balancer healthy_backends=9/12 unhealthy_backends=0 starting_backends=3"
+    },
+    {
+      "time_offset": 200,
+      "channel": "metrics",
+      "message": "deployment-system event=rollback_complete version=v3.2.0 instances=6/6 duration=62s"
+    },
+    {
+      "time_offset": 205,
+      "channel": "metrics",
+      "message": "api-gateway-cluster p99_latency=623ms p95_latency=402ms req/s=2789"
+    },
+    {
+      "time_offset": 210,
+      "channel": "metrics",
+      "message": "api-gateway-cluster status_code_2xx=2701/s status_code_5xx=88/s error_rate=3.1%"
+    },
+    {
+      "time_offset": 212,
+      "channel": "metrics",
+      "message": "alert-engine trigger_rate=387/s delivery_success=98.9% notification_lag=245ms"
+    },
+    {
+      "time_offset": 213,
+      "channel": "metrics",
+      "message": "data-pipeline ingestion_lag=1.2s throughput=52k/s kafka_consumer_lag=3.4s"
+    },
+    {
+      "time_offset": 215,
+      "channel": "team",
+      "message": "[Preetha-Dev] Checking code diff between v3.2.0 and v3.2.1..."
+    },
+    {
+      "time_offset": 218,
+      "channel": "zoom",
+      "message": "[Preetha-Dev] Looking through the changes now. There's not much in this release..."
+    },
+    {
+      "time_offset": 220,
+      "channel": "metrics",
+      "message": "load-balancer healthy_backends=12/12 connection_time_avg=12ms"
+    },
+    {
+      "time_offset": 225,
+      "channel": "metrics",
+      "message": "api-gateway-cluster p99_latency=298ms error_rate=1.4% req/s=2823"
+    },
+    {
+      "time_offset": 235,
+      "channel": "metrics",
+      "message": "api-gateway-prod-07 memory_used=3.4GB memory_percent=43% heap_objects=1.3M goroutines=412"
+    },
+    {
+      "time_offset": 240,
+      "channel": "metrics",
+      "message": "api-gateway-cluster p99_latency=201ms p95_latency=167ms error_rate=0.8%"
+    },
+    {
+      "time_offset": 245,
+      "channel": "team",
+      "message": "[Preetha-Dev] Found it! Line 247 in auth_middleware.go - HTTP client connections to auth-service not closed"
+    },
+    {
+      "time_offset": 247,
+      "channel": "zoom",
+      "message": "[Preetha-Dev] Got it! The new auth middleware isn't closing HTTP connections to auth-service"
+    },
+    {
+      "time_offset": 250,
+      "channel": "team",
+      "message": "[Preetha-Dev] Every request creates a new connection to auth-service but defer conn.Close() is missing"
+    },
+    {
+      "time_offset": 252,
+      "channel": "zoom",
+      "message": "[Preetha-Dev] It's creating a new HTTP client for every auth-service validation without cleaning up. Classic connection leak"
+    },
+    {
+      "time_offset": 254,
+      "channel": "metrics",
+      "message": "auth-service connection_pool_size=1247 active_connections=891 idle_timeout_ms=5000"
+    },
+    {
+      "time_offset": 255,
+      "channel": "metrics",
+      "message": "api-gateway-cluster status_code_2xx=2819/s status_code_5xx=14/s error_rate=0.5%"
+    },
+    {
+      "time_offset": 265,
+      "channel": "metrics",
+      "message": "api-gateway-cluster p99_latency=178ms error_rate=0.3% req/s=2841"
+    },
+    {
+      "time_offset": 270,
+      "channel": "team",
+      "message": "[Warren-SRE] That explains the memory leak. Connection pool exhaustion"
+    },
+    {
+      "time_offset": 272,
+      "channel": "zoom",
+      "message": "[Warren-SRE] Makes sense - that's why memory kept climbing. Connections never released"
+    },
+    {
+      "time_offset": 275,
+      "channel": "metrics",
+      "message": "api-gateway-prod-04 memory_used=3.5GB memory_percent=44% heap_stable=true gc_cycles=23"
+    },
+    {
+      "time_offset": 280,
+      "channel": "metrics",
+      "message": "api-gateway-cluster memory_avg=3.4GB memory_range=3.1-3.7GB all_instances_stable=true"
+    },
+    {
+      "time_offset": 285,
+      "channel": "team",
+      "message": "[Marcus-Oncall] All instances showing stable memory. Metrics back to normal"
+    },
+    {
+      "time_offset": 290,
+      "channel": "team",
+      "message": "[Marcus-Oncall] Should we close the incident?"
+    },
+    {
+      "time_offset": 295,
+      "channel": "metrics",
+      "message": "api-gateway-cluster p99_latency=156ms error_rate=0.14% req/s=2852"
+    },
+    {
+      "time_offset": 297,
+      "channel": "metrics",
+      "message": "threat-intel-service query_rate=1891/s cache_hit_ratio=93% response_time_p99=28ms"
+    },
+    {
+      "time_offset": 298,
+      "channel": "metrics",
+      "message": "detection-engine event_processing_lag=0.8s queue_depth=342 processing_rate=2150/s"
+    },
+    {
+      "time_offset": 300,
+      "channel": "metrics",
+      "message": "api-gateway-cluster status_code_2xx=2848/s status_code_5xx=4/s status_code_4xx=112/s"
+    },
+    {
+      "time_offset": 310,
+      "channel": "team",
+      "message": "[Warren-SRE] Let's monitor for 10 more minutes to be safe"
+    },
+    {
+      "time_offset": 312,
+      "channel": "zoom",
+      "message": "[Warren-SRE] Metrics look stable but let's watch for another 10 minutes before closing"
+    },
+    {
+      "time_offset": 320,
+      "channel": "metrics",
+      "message": "api-gateway-cluster p99_latency=149ms p50_latency=23ms error_rate=0.11%"
+    },
+    {
+      "time_offset": 335,
+      "channel": "metrics",
+      "message": "load-balancer healthy_backends=12/12 avg_response_time=145ms connection_errors=0"
+    },
+    {
+      "time_offset": 350,
+      "channel": "team",
+      "message": "[Preetha-Dev] PR #3421 ready with fix - added defer client.CloseIdleConnections()"
+    },
+    {
+      "time_offset": 355,
+      "channel": "metrics",
+      "message": "auth-service token_validations=5834/s success_rate=99.98% connection_pool_healthy=true"
+    },
+    {
+      "time_offset": 357,
+      "channel": "metrics",
+      "message": "data-pipeline ingestion_lag=0.6s throughput=58k/s all_consumers_healthy=true"
+    },
+    {
+      "time_offset": 360,
+      "channel": "metrics",
+      "message": "api-gateway-cluster uptime_5min=12/12 memory_trend=stable latency_trend=stable"
+    },
+    {
+      "time_offset": 370,
+      "channel": "metrics",
+      "message": "api-gateway-cluster p99_latency=151ms error_rate=0.09% all_health_checks=passing"
+    },
+    {
+      "time_offset": 372,
+      "channel": "metrics",
+      "message": "incident-service api_errors=0/s case_creation_lag=340ms alert-engine delivery_success=99.8%"
+    },
+    {
+      "time_offset": 375,
+      "channel": "metrics",
+      "message": "web-portal active_users=2934 websocket_health=100% page_load_p95=1.2s"
+    },
+    {
+      "time_offset": 380,
+      "channel": "team",
+      "message": "[Warren-SRE] All metrics nominal for 10+ minutes. Marking incident as resolved"
+    },
+    {
+      "time_offset": 382,
+      "channel": "zoom",
+      "message": "[Marcus-Oncall] Agreed. Thanks everyone. Great response. Let's close it out"
+    },
+    {
+      "time_offset": 385,
+      "channel": "zoom",
+      "message": "[Warren-SRE] Marking as resolved. Incident response complete."
+    },
+    {
+      "time_offset": 390,
+      "channel": "team",
+      "message": "[Warren-SRE] Incident closed: SEV-2, Duration: 6m20s, Peak error rate: 12.8%"
+    },
+    {
+      "time_offset": 395,
+      "channel": "zoom",
+      "message": "\ud83d\udd14 Deepank-PM left the incident bridge"
+    },
+    {
+      "time_offset": 400,
+      "channel": "team",
+      "message": "[Marcus-Oncall] Good work team. I'll start the postmortem doc"
+    },
+    {
+      "time_offset": 405,
+      "channel": "zoom",
+      "message": "[Marcus-Oncall] I'll get the postmortem started. Elijah, can you document the root cause?"
+    },
+    {
+      "time_offset": 410,
+      "channel": "team",
+      "message": "[Deepank-PM] Customer impact: ~6 minutes elevated errors. Great response time!"
+    },
+    {
+      "time_offset": 420,
+      "channel": "team",
+      "message": "[Preetha-Dev] PR has unit tests + integration test to prevent regression"
+    },
+    {
+      "time_offset": 425,
+      "channel": "zoom",
+      "message": "[Preetha-Dev] Will do. PR is ready with tests to catch this in the future"
+    },
+    {
+      "time_offset": 430,
+      "channel": "zoom",
+      "message": "\ud83d\udd14 Preetha-Dev left the incident bridge"
+    },
+    {
+      "time_offset": 435,
+      "channel": "team",
+      "message": "[Warren-SRE] Action items: 1) Review all new middleware for conn leaks 2) Add memory leak detection to CI"
+    },
+    {
+      "time_offset": 440,
+      "channel": "zoom",
+      "message": "\ud83d\udd14 Warren-SRE left the incident bridge"
+    },
+    {
+      "time_offset": 445,
+      "channel": "zoom",
+      "message": "\ud83d\udd14 Marcus-Oncall left the incident bridge"
+    },
+    {
+      "time_offset": 450,
+      "channel": "zoom",
+      "message": "\ud83d\udcde Incident bridge closed - Duration: 6m3s, Participants: 4"
+    }
+  ]
+}
