@@ -278,16 +278,26 @@ class IncidentMonitor:
 
             # 🚨 CHECK FOR RESOLUTION BEFORE GENERATING SUMMARY
             # Look at recent Zoom messages for resolution keywords
-            if not self.state.incident_resolved and not self.state.jira_tickets_created:
+            # SAFETY: Only check for resolution after incident has been running for at least 5 minutes
+            # and we've generated at least 3 summaries to ensure it's a real incident
+            incident_duration_minutes = (datetime.now().timestamp() - self.state.incident_start_time) / 60
+            
+            if (not self.state.incident_resolved and 
+                not self.state.jira_tickets_created and 
+                incident_duration_minutes >= 5.0 and 
+                self.state.summary_count >= 3):
+                
                 recent_zoom = [e.message.lower() for e in self.state.zoom_events[-5:]]
                 resolution_keywords = [
                     "marking as resolved", "incident resolved", "let's close it out",
-                    "marking this resolved", "close it out"
+                    "marking this resolved", "close it out", "incident response complete"
                 ]
                 
                 if any(keyword in msg for msg in recent_zoom for keyword in resolution_keywords):
                     print("\n" + "🔔"*40)
                     print("   🎯 INCIDENT RESOLUTION DETECTED IN ZOOM MESSAGES!")
+                    print(f"   ⏰ Incident duration: {incident_duration_minutes:.1f} minutes")
+                    print(f"   📊 Summaries generated: {self.state.summary_count}")
                     print("   📋 Creating JIRA tickets and Confluence post-mortem...")
                     print("="*80)
                     
@@ -470,17 +480,27 @@ class IncidentMonitor:
                 
                 # 🚨 NEW: Explicit post-mortem creation when incident is resolved
                 # Check if the summary indicates resolution and post-mortem hasn't been created
-                if not self.state.incident_resolved and not self.state.jira_tickets_created:
+                # SAFETY: Only check for resolution after minimum duration and summary count
+                incident_duration_minutes = (datetime.now().timestamp() - self.state.incident_start_time) / 60
+                
+                if (not self.state.incident_resolved and 
+                    not self.state.jira_tickets_created and
+                    incident_duration_minutes >= 5.0 and 
+                    self.state.summary_count >= 3):
+                    
                     response_lower = response_text.lower()
                     resolution_keywords = [
                         "incident resolved", "resolved -", "status: resolved",
                         "all systems operational", "systems have returned to normal",
-                        "incident closed", "marking as resolved"
+                        "incident closed", "marking as resolved", "systems restored",
+                        "services fully restored", "incident response complete"
                     ]
                     
                     if any(keyword in response_lower for keyword in resolution_keywords):
                         print("\n" + "🔔"*40)
-                        print("   🎯 INCIDENT RESOLUTION DETECTED!")
+                        print("   🎯 INCIDENT RESOLUTION DETECTED IN AI SUMMARY!")
+                        print(f"   ⏰ Incident duration: {incident_duration_minutes:.1f} minutes")
+                        print(f"   📊 Summaries generated: {self.state.summary_count}")
                         print("   📋 Creating JIRA tickets and Confluence post-mortem...")
                         print("="*80)
                         

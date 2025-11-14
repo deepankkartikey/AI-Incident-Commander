@@ -177,6 +177,8 @@ Create a JSON summary with these fields:
 Format your summary in clear markdown for Slack and post it using:
 `publish_exec_summary_to_slack(markdown_content="your summary here", channel_id="{channel_id}")`
 
+**CRITICAL: ONLY use the tool name 'publish_exec_summary_to_slack' - no other tool names exist for posting summaries!**
+
 Use this Slack markdown format:
 ```
 *:red_circle: Executive Incident Summary #{summary_count}*
@@ -200,10 +202,16 @@ Brief description of what's happening
 *ETA:* [If available]
 ```
 
-**STEP 3: Check for Resolution**
-If your summary indicates the incident is RESOLVED:
+**STEP 3: Check for Resolution (ONLY AFTER REAL INCIDENT ACTIVITY)**
+If your summary indicates the incident is RESOLVED AND the incident has been running for at least 5 minutes:
 - Call `create_jira_and_confluence_postmortem()` 
 - Post the result to Slack
+
+**IMPORTANT: DO NOT create post-mortem documentation if:**
+- This is your first few summaries (wait for at least 3-4 summaries)
+- The incident just started (wait at least 5 minutes)
+- You don't see actual incident activity in the event streams
+- The events show the system is still degraded or being investigated
 
 **Keep it Simple:**
 - Focus on ONE task: Generate and post executive summary
